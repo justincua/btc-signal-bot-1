@@ -13,7 +13,7 @@ SYMBOL = "BTCUSDT"
 BASE_URL = "https://fapi.binance.com"
 
 TELEGRAM_BOT_TOKEN = "8299632218:AAGJwtvLMtJj69Jewdv3H9tL2RCfO0VvVUY"
-TELEGRAM_CHAT_ID = "6060782678"
+TELEGRAM_CHAT_ID = "1003815900287"
 
 CHECK_INTERVAL_SECONDS = 60
 STATE_FILE = "signal_state.json"
@@ -588,7 +588,7 @@ def format_signal_message(sig: dict) -> str:
 
     return (
         f"🚨 <b>{SYMBOL} INTRADAY SIGNAL</b>\n\n"
-        f"📌 <b>Direction:</b> {sig['signal']}\n"
+        f"📌 <b>Direction (Lệnh Vào):</b> {sig['signal']}\n"
         f"📈 <b>Trend H1:</b> {sig['trend']}\n"
         f"🎯 <b>Entry:</b> {sig['entry']}\n"
         f"🛑 <b>SL:</b> {sig['sl']}\n"
@@ -679,7 +679,7 @@ def run_once():
 
 def main():
     log("Bot BTC Intraday Signal Full đang chạy...")
-    send_telegram("🤖 Bot BTC Intraday Signal Full đã khởi động.")
+    send_telegram("🤖 Bot JustinCuaFX BTC Intraday Signal Full đã khởi động.")
 
     while True:
         try:
@@ -690,4 +690,5 @@ def main():
         time.sleep(CHECK_INTERVAL_SECONDS)
 
 if __name__ == "__main__":
+
     main()
