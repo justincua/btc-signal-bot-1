@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "lambobet",
+  "private_key_id": "b1e2de0b36e8bda1322c33fe6397c60eb1162739",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDvg3jd4t0937AM\ntF4oqnPapy9oy9kgyamx4YRFMYnvCxMChj8oz4u+8RYDgYU+v999j1rZTLaUYjp1\nzlH+88yxoK/mnu2CwWCW4eIHfUxupUGmfjJqMVfPs63d6YqALiXO7W8+cSv68YPe\nvH7RW9J9RwjC0eUC+FLOtlTdLhUR6yVJY1kKaeVkxEjLzBCRbWiZu0k609DRCuaO\n8zdK/vgsuJROpF+iLJ0k7lpGq/GB2gM2qngjVmeSxa+haGSfz1rTjUThOEsN0wdX\n9p2u2lKDC9WcQ/XMBHLCvO5q8PB7ZglGZ+enp1Wg03svFsIQ7lGX22h0ms8WCeJb\nLWQ8yJd5AgMBAAECggEAIicMGA+eXpFD6Dvb5U6Q4I/QWdAfcOZwlRXEJ52tvnFE\nz6pW3TnjAmIcMnnIhy8S7jN/z9Z5fmUXUu8NkB4xhO6VxnvJAEkUvc8NzOWX/XsB\nBn2eMLhCfjJvy2HexvJNn9kJcMzwaYMAu8UDDFVciVKUtDr7vdWs8R7csQE+LeSk\nNVR/bvYEWc4oozhQ12yOLFjYalVGIhkaTJFXJxtoAj/jUh0UTViVSn4zJ9u1O8CH\nO9ADw4hrpqn0CXeDnDGkdHX0oF5qFnlbn0ZjJBQ61pYpsnvNidWZiWiPRhYpYmeZ\nXJbmocoWhsBHZZybt3FjSip4cxa7aX2fXS28Re5/kQKBgQD83VunqloDuJGWoiUl\nRc3+DcVBxdCpCDJhDA/HnyJxCUVexcoKyy3Xs2E/VAVdNUz7+61b5jVWmTSMvYqo\n/ugm5WQD7wpcDVH/PDTnvx1tj6eXyEQ8lNl//RxFdkBPpl2gnXmyIBVxzUUXcYgG\nTuf3mGimXoXjV31f+AEGW7BnxQKBgQDye7wsVff1LqnLWuiG3/rCijwVO0YKIjod\n3DQsyh3qO7JkZ/8AQwqkmH4TTaGJRh6oKasve2Q0a7rdtTnUnsJsAPFB3lhF0VGc\nBT0ATJ8zfs0gapJkYpyD2iSulNNE6J7IXtlbH4Gp8lNLxf6vX9AzRkTpG5xDNVRo\n44NU0iS4JQKBgQCK8WsKfx2FC+bbuW7lwyyEW7a3BGY6aymbj9Af5T48lFaM0+vH\n8IrZClT2QknMRJxvnYRNifpnAjoQ15mYcLDJpqRFURUFLcCPmdqMOMSHzjbNvRpZ\nm4TDwiXFuUtvOMAboEwdZ2nBJYTAc/7FUJg/wXxHZor1N77Je/G8N6d/7QKBgCgv\nY18BnEcwxYji9vgrNFZ7LDvkh9X0GCeMr8Tgdha0b/r91R/I/IGMmBBA5E1opnn9\n9dW3oEKju+M0PnJDITte6Jye6YggiWLO524eRJ/3Gq2Nm9cxFHkxdLTOCzk3R+Ey\n/tiAHy/37d/33x5XRZzJv2/WWI42z1dWpRQwg09VAoGAH1w7RKnc4k3D8mfpQ283\nOGKFUN2vVv6DbB/fLQEQH7K1s4cfZ9gk9LZyW9V9BRgBpnxQSbhEn/t24r3GMn5n\nxox5gtBi7/do5yTHkOZTeSklVfjSDOqatP2NIoTRh3YI5EVvycO+ZS+FmEwNHPw7\nuKJP6XLH0wEzTwc3hSvh0zs=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@lambobet.iam.gserviceaccount.com",
+  "client_id": "113771275073008644528",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40lambobet.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
