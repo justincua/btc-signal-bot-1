@@ -13,7 +13,7 @@ SYMBOL = "BTCUSDT"
 BASE_URL = "https://fapi.binance.com"
 
 TELEGRAM_BOT_TOKEN = "8299632218:AAGJwtvLMtJj69Jewdv3H9tL2RCfO0VvVUY"
-TELEGRAM_CHAT_ID = "1003815900287"
+TELEGRAM_CHAT_ID = "-1003815900287"
 
 CHECK_INTERVAL_SECONDS = 60
 STATE_FILE = "signal_state.json"
@@ -692,3 +692,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
