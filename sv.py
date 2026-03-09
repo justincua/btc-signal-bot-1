@@ -74,13 +74,13 @@ def save_signals(signals):
     save_json_file(SIGNALS_FILE, signals)
 
 def send_telegram(text: str):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID \
-       or TELEGRAM_BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN" \
-       or TELEGRAM_CHAT_ID == "YOUR_TELEGRAM_CHAT_ID":
+
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         log("Telegram chưa cấu hình.")
-        return
+        return None
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
         "text": text,
@@ -89,11 +89,30 @@ def send_telegram(text: str):
 
     try:
         r = requests.post(url, data=payload, timeout=15)
-        if r.status_code != 200:
-            log(f"Telegram lỗi: {r.status_code} - {r.text}")
+        data = r.json()
+
+        if data.get("ok"):
+            return data["result"]["message_id"]
+
+        log(f"Telegram lỗi: {data}")
+
     except Exception as e:
         log(f"Lỗi gửi Telegram: {e}")
 
+    return None
+def delete_telegram_message(message_id):
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteMessage"
+
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "message_id": message_id
+    }
+
+    try:
+        requests.post(url, data=payload, timeout=10)
+    except:
+        pass
 # =========================================================
 # BINANCE DATA
 # =========================================================
@@ -670,12 +689,26 @@ def run_once():
     else:
         log("Không có signal đẹp.")
 
-    stats = calculate_stats()
-    log(
-        f"Stats | Total={stats['total_signals']} | Open={stats['open_signals']} | "
-        f"Closed={stats['closed_signals']} | Win={stats['wins']} | Lose={stats['losses']} | "
-        f"Winrate={stats['winrate']}%"
-    )
+stats = calculate_stats()
+
+log(
+    f"Stats | Total={stats['total_signals']} | Open={stats['open_signals']} | "
+    f"Closed={stats['closed_signals']} | Win={stats['wins']} | Lose={stats['losses']} | "
+    f"Winrate={stats['winrate']}%"
+)
+
+state = load_state()
+
+last_msg = state.get("stats_message_id")
+
+if last_msg:
+    delete_telegram_message(last_msg)
+
+msg_id = send_telegram(format_stats_message(stats))
+
+state["stats_message_id"] = msg_id
+
+save_state(state)
 
 def main():
     log("Bot BTC Intraday Signal Full đang chạy...")
@@ -692,3 +725,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
