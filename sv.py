@@ -19,6 +19,7 @@ CHECK_INTERVAL_SECONDS = 60
 STATE_FILE = "signal_state.json"
 SIGNALS_FILE = "signals.json"
 
+# Bộ lọc signal
 RR_MIN = 1.5
 ATR_SL_MULTIPLIER = 1.2
 MIN_VOLUME_RATIO = 1.05
@@ -28,14 +29,12 @@ RSI_BUY_MAX = 62
 RSI_SELL_MIN = 38
 RSI_SELL_MAX = 55
 
+# Chỉ gửi signal nếu confidence >= mức này
 MIN_CONFIDENCE_TO_SEND = 68
-CLOSE_ON_FIRST_TP_HIT = True
 
-# =========================================================
-# ADDED: STATUS / DAILY REPORT VARIABLES
-# =========================================================
-LAST_STATUS_TIME = 0
-LAST_DAILY_REPORT_DATE = ""
+# Nếu true: đóng lệnh ngay khi chạm TP1/TP2/TP3
+# Nếu false: có thể sửa tiếp logic trailing / partial
+CLOSE_ON_FIRST_TP_HIT = True
 
 # =========================================================
 # HELPERS
@@ -82,7 +81,6 @@ def send_telegram(text: str):
         return
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
         "text": text,
@@ -97,123 +95,71 @@ def send_telegram(text: str):
         log(f"Lỗi gửi Telegram: {e}")
 
 # =========================================================
-# ADDED: STATUS MESSAGE
-# =========================================================
-def send_status_message():
-
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    msg = (
-        "🤖 <b>BOT JustinCuaFX đang tìm tín hiệu...</b>\n\n"
-        "Đang Kiểm Tra markets...\n\n"
-        "BTCUSDT: Monitoring\n"
-        "XAUUSD: Monitoring\n\n"
-        f"Time: {now}"
-    )
-
-    send_telegram(msg)
-
-# =========================================================
-# ADDED: DAILY REPORT
-# =========================================================
-def send_daily_report():
-
-    stats = calculate_stats()
-
-    msg = (
-        "📊 <b>DAILY REPORT</b>\n\n"
-        f"Trades: {stats['closed_signals']}\n"
-        f"Wins: {stats['wins']}\n"
-        f"Loss: {stats['losses']}\n"
-        f"Winrate: {stats['winrate']}%"
-    )
-
-    send_telegram(msg)
-
-# =========================================================
 # BINANCE DATA
 # =========================================================
 def get_klines(symbol: str, interval: str, limit: int = 300) -> pd.DataFrame:
-
     url = f"{BASE_URL}/fapi/v1/klines"
-
     params = {
         "symbol": symbol,
         "interval": interval,
         "limit": limit
     }
-
     r = requests.get(url, params=params, timeout=15)
     r.raise_for_status()
-
     data = r.json()
 
     cols = [
-        "open_time","open","high","low","close","volume",
-        "close_time","quote_asset_volume","number_of_trades",
-        "taker_buy_base_asset_volume","taker_buy_quote_asset_volume","ignore"
+        "open_time", "open", "high", "low", "close", "volume",
+        "close_time", "quote_asset_volume", "number_of_trades",
+        "taker_buy_base_asset_volume", "taker_buy_quote_asset_volume", "ignore"
     ]
-
     df = pd.DataFrame(data, columns=cols)
 
     numeric_cols = [
-        "open","high","low","close","volume",
-        "quote_asset_volume","taker_buy_base_asset_volume","taker_buy_quote_asset_volume"
+        "open", "high", "low", "close", "volume",
+        "quote_asset_volume", "taker_buy_base_asset_volume", "taker_buy_quote_asset_volume"
     ]
-
     for c in numeric_cols:
         df[c] = df[c].astype(float)
 
     df["open_time"] = pd.to_datetime(df["open_time"], unit="ms", utc=True)
     df["close_time"] = pd.to_datetime(df["close_time"], unit="ms", utc=True)
-
     return df
 
 def get_mark_price(symbol: str) -> float:
-
     url = f"{BASE_URL}/fapi/v1/premiumIndex"
-
-    r = requests.get(url, params={"symbol": symbol}, timeout=15)
-
+    params = {"symbol": symbol}
+    r = requests.get(url, params=params, timeout=15)
     r.raise_for_status()
-
-    return safe_float(r.json().get("markPrice"))
+    data = r.json()
+    return safe_float(data.get("markPrice"))
 
 def get_open_interest(symbol: str) -> float:
-
     url = f"{BASE_URL}/fapi/v1/openInterest"
-
-    r = requests.get(url, params={"symbol": symbol}, timeout=15)
-
+    params = {"symbol": symbol}
+    r = requests.get(url, params=params, timeout=15)
     r.raise_for_status()
-
-    return safe_float(r.json().get("openInterest"))
+    data = r.json()
+    return safe_float(data.get("openInterest"))
 
 def get_funding_rate(symbol: str) -> float:
-
     url = f"{BASE_URL}/fapi/v1/fundingRate"
-
-    r = requests.get(url, params={"symbol": symbol, "limit": 1}, timeout=15)
-
+    params = {"symbol": symbol, "limit": 1}
+    r = requests.get(url, params=params, timeout=15)
     r.raise_for_status()
-
     data = r.json()
-
     if not data:
         return 0.0
-
-    return safe_float(data[-1]["fundingRate"])
+    return safe_float(data[-1].get("fundingRate"))
 
 # =========================================================
 # INDICATORS
 # =========================================================
-def ema(series: pd.Series, period: int):
+def ema(series: pd.Series, period: int) -> pd.Series:
     return series.ewm(span=period, adjust=False).mean()
 
-def rsi(series: pd.Series, period: int = 14):
-
+def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
-
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
 
@@ -221,36 +167,24 @@ def rsi(series: pd.Series, period: int = 14):
     avg_loss = loss.ewm(alpha=1/period, adjust=False).mean()
 
     rs = avg_gain / avg_loss.replace(0, 1e-10)
-
-    return 100 - (100/(1+rs))
+    return 100 - (100 / (1 + rs))
 
 def macd(series: pd.Series, fast=12, slow=26, signal=9):
-
     ema_fast = ema(series, fast)
     ema_slow = ema(series, slow)
-
     macd_line = ema_fast - ema_slow
-
     signal_line = ema(macd_line, signal)
-
     hist = macd_line - signal_line
-
     return macd_line, signal_line, hist
 
-def atr(df: pd.DataFrame, period: int = 14):
-
+def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
     high_low = df["high"] - df["low"]
-
     high_close = (df["high"] - df["close"].shift()).abs()
-
     low_close = (df["low"] - df["close"].shift()).abs()
-
     tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-
     return tr.ewm(alpha=1/period, adjust=False).mean()
 
-def add_indicators(df):
-
+def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
     df["ema20"] = ema(df["close"], 20)
@@ -260,13 +194,11 @@ def add_indicators(df):
     df["rsi14"] = rsi(df["close"], 14)
 
     macd_line, signal_line, hist = macd(df["close"])
-
     df["macd"] = macd_line
     df["macd_signal"] = signal_line
     df["macd_hist"] = hist
 
     df["atr14"] = atr(df, 14)
-
     df["vol_sma20"] = df["volume"].rolling(20).mean()
 
     return df
@@ -693,22 +625,17 @@ def format_closed_signal_message(s: dict) -> str:
 # MAIN
 # =========================================================
 def run_once():
-
-    global LAST_STATUS_TIME
-    global LAST_DAILY_REPORT_DATE
-
     log("Đang lấy dữ liệu...")
 
     mark_price = get_mark_price(SYMBOL)
 
     closed_results = update_open_signals(mark_price)
-
     for item in closed_results:
         send_telegram(format_closed_signal_message(item))
         log(f"Signal đóng: {item['id']} -> {item['result']}")
 
-    df_h1 = get_klines(SYMBOL,"1h",300)
-    df_m15 = get_klines(SYMBOL,"15m",300)
+    df_h1 = get_klines(SYMBOL, "1h", 300)
+    df_m15 = get_klines(SYMBOL, "15m", 300)
 
     df_h1 = add_indicators(df_h1)
     df_m15 = add_indicators(df_m15)
@@ -716,68 +643,34 @@ def run_once():
     funding = get_funding_rate(SYMBOL)
 
     oi_prev = get_open_interest(SYMBOL)
-
     time.sleep(2)
-
     oi_now = get_open_interest(SYMBOL)
 
-    signal = generate_signal(df_h1,df_m15,mark_price,funding,oi_now,oi_prev)
+    signal = generate_signal(df_h1, df_m15, mark_price, funding, oi_now, oi_prev)
 
     state = load_state()
 
     if signal:
-
         log(f"Có signal: {signal['signal']} | Entry={signal['entry']} | Confidence={signal['confidence']}%")
 
         if signal["confidence"] >= MIN_CONFIDENCE_TO_SEND:
-
-            if not is_duplicate_signal(state,signal):
-
+            if not is_duplicate_signal(state, signal):
                 append_signal(signal)
-
                 send_telegram(format_signal_message(signal))
 
                 state["last_signal"] = signal
                 state["last_signal_ts"] = time.time()
-
                 save_state(state)
 
                 log("Đã lưu signal và gửi Telegram.")
-
             else:
-
                 log("Signal trùng gần đây, bỏ qua.")
-
         else:
-
             log(f"Signal có nhưng confidence thấp ({signal['confidence']}%), bỏ qua.")
-
     else:
-
         log("Không có signal đẹp.")
 
     stats = calculate_stats()
-
-    # ==========================
-    # STATUS MESSAGE mỗi phút
-    # ==========================
-    if time.time() - LAST_STATUS_TIME >= 60:
-
-        send_status_message()
-
-        LAST_STATUS_TIME = time.time()
-
-    # ==========================
-    # DAILY REPORT
-    # ==========================
-    today = datetime.now().strftime("%Y-%m-%d")
-
-    if LAST_DAILY_REPORT_DATE != today:
-
-        send_daily_report()
-
-        LAST_DAILY_REPORT_DATE = today
-
     log(
         f"Stats | Total={stats['total_signals']} | Open={stats['open_signals']} | "
         f"Closed={stats['closed_signals']} | Win={stats['wins']} | Lose={stats['losses']} | "
@@ -785,23 +678,15 @@ def run_once():
     )
 
 def main():
-
     log("Bot BTC Intraday Signal Full đang chạy...")
-
     send_telegram("🤖 Bot JustinCuaFX BTC Intraday Signal Full đã khởi động.")
 
     while True:
-
         try:
-
             run_once()
-
         except Exception as e:
-
             err = f"❌ Bot lỗi: {e}"
-
             log(err)
-
         time.sleep(CHECK_INTERVAL_SECONDS)
 
 if __name__ == "__main__":
